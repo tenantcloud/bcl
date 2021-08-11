@@ -1,6 +1,6 @@
 # BCL
 
-Derivation of SierraSoftworks' [Bash CLI](https://github.com/SierraSoftworks/bash-cli).
+Derivation of SierraSoftworks [Bash CLI](https://github.com/SierraSoftworks/bash-cli).
 
 Bash CLI was borne of the need to provide a common entrypoint into a range of scripts
 and tools for a project. Rather than port the scripts to something like Go or Python,
