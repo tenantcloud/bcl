@@ -1,3 +1,7 @@
+
+[![Build Status](https://github.com/tenantcloud/bcl/workflows/Enlarge%20version/badge.svg)](https://github.com/tenantcloud/bcl/workflows/Enlarge%20version/badge.svg)
+[![Stable Version](https://img.shields.io/github/v/tag/tenantcloud/bcl)](https://img.shields.io/github/v/tag/tenantcloud/bcl)
+
 # BCL
 
 Derivation of SierraSoftworks [Bash CLI](https://github.com/SierraSoftworks/bash-cli).
