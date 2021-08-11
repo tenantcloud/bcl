@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC1090
+
+set -e
+
+source "$ROOT_DIR/app/.helper/package"
+source "$ROOT_DIR/app/.helper/system"
+
+INSTALL_DIRECTORY="$HOME/.bcl"
+
+# parse_args parses positional arguments
+parse_args() {
+    REPOSITORY=$1
+    PACKAGE=$2
+
+    if [[ -z "$PACKAGE" ]]; then
+        exit 3
+    fi
+
+    if [[ -z "$REPOSITORY" ]]; then
+        exit 3
+    fi
+}
+
+main() {
+    parse_args "$@"
+
+    package_name=$(get_package_name "$PACKAGE")
+    package_version=$(get_package_version "$PACKAGE")
+    package_channel=$(get_package_channel "$PACKAGE")
+    package_platform=$(get_package_platform "$PACKAGE")
+
+    # Fetch appropriate version of the package from git
+    echo "Fetching available versions of $package_name..."
+    remote_branches=$(git ls-remote "$REPOSITORY")
+    available_packages="$(get_available_packages "$remote_branches")"
+
+    package_canonical_name="$(get_available_canonical_name "$available_packages" "$package_name" "$package_version" "$package_channel" "$package_platform")"
+    package_commit_hash="$(get_package_commit_hash "$remote_branches" "$package_canonical_name")"
+
+    # Install the package
+    echo "Installing $package_canonical_name..."
+    is_installed=$(install_package "$REPOSITORY" "$package_canonical_name" "$package_commit_hash" "$INSTALL_DIRECTORY")
+
+    if [[ "$is_installed" == "true" ]]; then
+        echo "Finished installing $package_canonical_name"
+    else
+        echo "$package_canonical_name is already installed"
+    fi
+
+    # Check the PATH environment variable
+    if ! echo "$PATH" | _grep -e "$INSTALL_DIRECTORY/cli" > /dev/null 2>&1; then
+        echo ""
+
+        echo "Please add '$INSTALL_DIRECTORY/cli' into your \$PATH variable" \
+             "(without the quote). You can do this by adding this line to" \
+             "your ~/.bashrc or ~/.zshrc file:" | fold -sw80
+
+        echo "    " "export PATH=\"$INSTALL_DIRECTORY/cli:\$PATH\""
+    fi
+}
+
+main "$@"

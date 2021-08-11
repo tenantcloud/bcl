@@ -1,0 +1,4 @@
+Removes an installed Bash CLI command line app by removing the symlink to it.
+This command will only work within the directory of the project which created
+the symlink originally, and only if the same arguments provided to install
+are provided again.

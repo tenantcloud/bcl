@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# cli_dir returns absolute (non-symlink) path to the directory containing
+# the *ctl entrypoint script
+function cli_dir() {
+    # kernel returns the kernel type of the system
+    function kernel() {
+        uname -s
+    }
+
+    # _readlink wraps readlink in Linux or greadlink in Mac OS
+    function _readlink() {
+        if [ "$(kernel)" == "Linux" ]; then
+            readlink "$@"
+            return $?
+        elif [ "$(kernel)" == "Darwin" ]; then
+            greadlink "$@"
+            return $?
+        fi
+
+        echo "readlink: invalid kernel name $(kernel)" >&2
+        return 1
+    }
+
+    # The additional ../../../ are required since this file is located three
+    # directories down from from the desired directory
+    _readlink -f "$(dirname "$(_readlink -f "$0")")/../../../"
+}
+
+CLI_DIR="$(cli_dir)"
+PRJ_NAME="__project_name__"
+SUFFIX="ctl"
+
+cat > "$HOME/.bash_completion.d/$PRJ_NAME$SUFFIX" <<EOC
+# shellcheck disable=SC1091
+source "$CLI_DIR/$PRJ_NAME/framework/complete"
+complete -F _bash_cli_$PRJ_NAME$SUFFIX $PRJ_NAME$SUFFIX
+EOC
+
+if [[ -f "$CLI_DIR/$PRJ_NAME/$PRJ_NAME$SUFFIX" ]]; then
+    exit 1
+fi

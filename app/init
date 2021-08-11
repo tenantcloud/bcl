@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+if [ $# == 0 ]; then
+    exit 3
+fi
+
+CUR_DIR=$(pwd)
+APP_DIR="$CUR_DIR"
+PRJ_NAME="${!#}"
+SUFFIX="ctl"
+__bcl_path=$( ls -alh "$HOME"/.local/bin/bcl )
+
+# get_value_from_user "Question for a user" "default answere"
+# User value in variable "$_user_value"
+function get_value_from_user () {
+    _message_to_user="$1"
+    _default_value="$2"
+    printf "%s [%s]: " "$_message_to_user" "$_default_value"
+    read -r _user_value
+    if [[ -z $_user_value ]]; then
+      _user_value="$_default_value"
+    fi
+}
+
+mkdir -p "$CUR_DIR/$PRJ_NAME/files"
+mkdir -p "$CUR_DIR/$PRJ_NAME/framework"
+__bcl_framework_path=$( echo "$__bcl_path" | awk '{print $11}' | sed 's/\/cli/\/framework\//g')
+cp "$__bcl_framework_path"* "$CUR_DIR/$PRJ_NAME/framework"
+
+sed -i.bak "s/function_name/_bash_cli_$PRJ_NAME$SUFFIX/g" "$CUR_DIR/$PRJ_NAME/framework/complete"
+rm "$CUR_DIR/$PRJ_NAME/framework/complete.bak"
+
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$CUR_DIR/$PRJ_NAME/framework/complete"
+rm "$CUR_DIR/$PRJ_NAME/framework/complete.bak"
+
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$CUR_DIR/$PRJ_NAME/framework/help"
+rm "$CUR_DIR/$PRJ_NAME/framework/help.bak"
+
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$CUR_DIR/$PRJ_NAME/framework/cli"
+rm "$CUR_DIR/$PRJ_NAME/framework/cli.bak"
+
+if [[ -d "$CUR_DIR/$PRJ_NAME/app" ]]; then
+    APP_DIR="$APP_DIR/$PRJ_NAME/app"
+else
+    mkdir -p "$APP_DIR/$PRJ_NAME/app"
+    APP_DIR="$APP_DIR/$PRJ_NAME/app"
+fi
+
+mkdir -p "$APP_DIR/autocomplete"
+__bcl_autocomplete_path=$( echo "$__bcl_path" | awk '{print $11}' | sed 's/\/cli/\/autocomplete\//g')
+cp "$__bcl_autocomplete_path"* "$APP_DIR/autocomplete"
+
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$APP_DIR/autocomplete/apply"
+rm "$APP_DIR/autocomplete/apply.bak"
+
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$APP_DIR/autocomplete/remove"
+rm "$APP_DIR/autocomplete/remove.bak"
+
+get_value_from_user "Enter Author name" "$(whoami)"
+cat > "$APP_DIR/.author" <<EOT
+$_user_value
+EOT
+
+get_value_from_user "Version of package" "0.1"
+cat > "$APP_DIR/.version" <<EOT
+$_user_value
+EOT
+
+get_value_from_user "Short information about a BCL package" "BCL package. Short info"
+cat > "$APP_DIR/.help" <<EOT
+$_user_value
+EOT
+
+cat > "$HOME/.bash_completion.d/$PRJ_NAME$SUFFIX" <<EOC
+# shellcheck disable=SC1091
+source "$CUR_DIR/$PRJ_NAME/framework/complete"
+complete -F _bash_cli_$PRJ_NAME$SUFFIX $PRJ_NAME$SUFFIX
+EOC
+
+>&2 echo "Initialized Bash CLI project: $PRJ_NAME."
+
+if [[ -f "$CUR_DIR/$PRJ_NAME/$PRJ_NAME$SUFFIX" ]]; then
+    exit 1
+fi
+
+# Render the *ctl entrypoint
+mv "$CUR_DIR/$PRJ_NAME/framework/entrypoint" "$CUR_DIR/$PRJ_NAME$SUFFIX"
+sed -i.bak "s/__project_name__/$PRJ_NAME/g" "$CUR_DIR/$PRJ_NAME$SUFFIX"
+rm "$CUR_DIR/$PRJ_NAME$SUFFIX.bak"
+
+chmod +x "$CUR_DIR/$PRJ_NAME$SUFFIX"

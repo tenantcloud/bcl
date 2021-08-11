@@ -1,0 +1,2 @@
+Installs your command line app under the given name by creating a symlink
+to the Bash CLI proxy.
