@@ -19,7 +19,7 @@ Install:
 ## Installation
 
 ```bash
-curl -L -s https://git.io/JRi57 | bash
+curl -L -s https://git.io/JGaJV | bash
 ```
 
 Enable autocomplete for zsh
